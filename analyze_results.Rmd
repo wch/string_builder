@@ -49,7 +49,7 @@ Same as above, but with log y scale:
 p +
   scale_y_continuous(
     trans = log2_trans(),
-    breaks = trans_breaks("log2", function(x) 2^x, n = 15),
+    breaks = trans_breaks("log2", function(x) 2^x, n = 12),
     minor_breaks = NULL,
     labels = trans_format("log2", math_format(2^.x))
   ) +
@@ -75,7 +75,7 @@ p <- ggplot(results, aes(n_strings, time / n_strings, color = method)) +
   ylab("Seconds") +
   scale_y_continuous(
     trans = log2_trans(),
-    breaks = trans_breaks("log2", function(x) 2^x, n = 15),
+    breaks = trans_breaks("log2", function(x) 2^x, n = 12),
     minor_breaks = NULL,
     labels = trans_format("log2", math_format(2^.x))
   ) +
