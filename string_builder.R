@@ -153,7 +153,7 @@ write.table(results, "results.csv",
 nchar(res_paste)
 substr(res_paste, 1, 60)
 
-# Make all of the string builders generate identical results.
+# Make sure all of the string builders generate identical results.
 stopifnot(identical(res_paste, res_c))
 stopifnot(identical(res_paste, res_bfile))
 stopifnot(identical(res_paste, res_bracket))

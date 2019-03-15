@@ -15,7 +15,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 results <- read.csv("results.csv", header = FALSE)
 colnames(results) <- c("R_version", "method", "time")
 
-results$method <- factor(results$method, levels = c("paste", "c", "bracket"))
+results$method <- factor(results$method,
+  levels = c("paste", "c", "bfile", "bracket")
+)
 ```
 
 Performance of various string builder methods on different R versions:
