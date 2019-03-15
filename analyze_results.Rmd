@@ -6,14 +6,14 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 8, fig.height = 6)
 ```
 
 
 
 ```{r}
 results <- read.csv("results.csv", header = FALSE)
-colnames(results) <- c("R_version", "method", "time")
+colnames(results) <- c("R_version", "method", "time", "n_strings")
 
 results$method <- factor(results$method,
   levels = c("paste", "c", "bfile", "bracket")
@@ -26,11 +26,18 @@ Performance of various string builder methods on different R versions:
 library(ggplot2)
 library(scales)
 
-p <- ggplot(results, aes(R_version, time, color = method)) +
+p <- ggplot(results, aes(n_strings, time, color = method)) +
   geom_line(aes(group = method)) +
+  geom_point() +
+  scale_x_continuous(
+    trans = log10_trans(),
+    breaks = trans_breaks("log10", function(x) 10^x),
+    labels = trans_format("log10", math_format(10^.x))
+  ) +
+  facet_wrap(. ~ R_version) +
   ylab("Seconds") +
   ggtitle("String builder performance",
-    "Time to accumulate 20,000 strings, plus spaces between them"
+    "Time to accumulate n strings, plus spaces between them"
   )
 
 p
@@ -38,19 +45,46 @@ p
 
 Same as above, but with log y scale:
 
-
 ```{r}
 p +
   scale_y_continuous(
     trans = log2_trans(),
-    breaks = trans_breaks("log2", function(x) 2^x, n = 10),
+    breaks = trans_breaks("log2", function(x) 2^x, n = 15),
+    minor_breaks = NULL,
     labels = trans_format("log2", math_format(2^.x))
   ) +
   ggtitle("String builder performance (log2 y scale)",
-    "Time to accumulate 20,000 strings, plus spaces between them"
+    "Time to accumulate n strings, plus spaces between them"
   )
 ```
 
+
+
+Time per item:
+
+```{r}
+p <- ggplot(results, aes(n_strings, time / n_strings, color = method)) +
+  geom_line(aes(group = method)) +
+  geom_point() +
+  scale_x_continuous(
+    trans = log10_trans(),
+    breaks = trans_breaks("log10", function(x) 10^x),
+    labels = trans_format("log10", math_format(10^.x))
+  ) +
+  facet_wrap(. ~ R_version) +
+  ylab("Seconds") +
+  scale_y_continuous(
+    trans = log2_trans(),
+    breaks = trans_breaks("log2", function(x) 2^x, n = 15),
+    minor_breaks = NULL,
+    labels = trans_format("log2", math_format(2^.x))
+  ) +
+  ggtitle("String builder performance (log2 y scale)",
+    "Time per item"
+  )
+
+p
+```
 
 Raw data:
 

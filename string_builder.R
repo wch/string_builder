@@ -80,79 +80,72 @@ string_builder_bracket <- function() {
 # Note that some care will need to be taken when the input is vectors of strings
 # that are different lengths.
 
+string_builders <- list(
+  paste   = string_builder_paste,
+  c       = string_builder_c,
+  bfile   = string_builder_bfile,
+  bracket = string_builder_bracket
+)
+
+
+
 
 
 # =============================================================================
 # Tests
 # =============================================================================
 
-# Generate some random input
-n_strings <- 2e4
-input_strings <- vapply(seq_len(n_strings), function(n) {
-  paste0(sample(letters, 5, replace = TRUE), collapse = "")
-}, "")
-
-head(input_strings)
 
 # =============================================================================
 # Timings for string builders
 # =============================================================================
 
-time_paste <- system.time({
-  s <- string_builder_paste()
-  for (i in seq_along(input_strings)) {
-    s$add(input_strings[i], " ")
+
+
+benchmark <- function(string_builders, n_strings) {
+  results <- data.frame()
+
+  for (n in n_strings) {
+    cat("n strings=", n, "...", sep = "")
+    # Generate some random input strings
+    input_strings <- vapply(seq_len(n), function(n) {
+      paste0(sample(letters, 5, replace = TRUE), collapse = "")
+    }, "")
+
+    times <- list()
+    string_result <- list()
+
+    # Benchmark each string builder for this size
+    for (name in names(string_builders)) {
+      cat(name, " ", sep = "")
+      string_builder <- string_builders[[name]]
+
+      time <- system.time({
+        s <- string_builder()
+        for (i in seq_along(input_strings)) {
+          s$add(input_strings[i], " ")
+        }
+        string_result[[name]] <- s$get()
+      })
+
+      ## TODO: Check that results are all the same
+
+      results <- rbind(
+        results,
+        data.frame(
+          r_version = paste0(R.version$major, ".", R.version$minor),
+          type = name,
+          time = time[['elapsed']],
+          n_strings = n
+        )
+      )
+    }
+
+    write.table(results, "results.csv",
+      col.names = FALSE, row.names = FALSE, sep = ","
+    )
+    cat("\n")
   }
-  res_paste <- s$get()
-})
+}
 
-time_c <- system.time({
-  s <- string_builder_c()
-  for (i in seq_along(input_strings)) {
-    s$add(input_strings[i], " ")
-  }
-  res_c <- s$get()
-})
-
-time_bfile <- system.time({
-  s <- string_builder_bfile()
-  for (i in seq_along(input_strings)) {
-    s$add(input_strings[i], " ")
-  }
-  res_bfile <- s$get()
-})
-
-time_bracket <- system.time({
-  s <- string_builder_bracket()
-  for (i in seq_along(input_strings)) {
-    s$add(input_strings[i], " ")
-  }
-  res_bracket <- s$get()
-})
-
-
-# Save the results for analysis
-results <- data.frame(
-  r_version = paste0(R.version$major, ".", R.version$minor),
-  type = c("paste", "c", "bfile", "bracket"),
-  time = c(
-    time_paste[['elapsed']],
-    time_c[['elapsed']],
-    time_bfile[['elapsed']],
-    time_bracket[['elapsed']]
-  )
-)
-write.table(results, "results.csv",
-  col.names = FALSE, row.names = FALSE, sep = ",", append = TRUE
-)
-
-# =============================================================================
-# Check that the result looks right
-# =============================================================================
-nchar(res_paste)
-substr(res_paste, 1, 60)
-
-# Make sure all of the string builders generate identical results.
-stopifnot(identical(res_paste, res_c))
-stopifnot(identical(res_paste, res_bfile))
-stopifnot(identical(res_paste, res_bracket))
+benchmark(string_builders, c(200, 500, 1000, 2000, 5000, 10000, 20000))
