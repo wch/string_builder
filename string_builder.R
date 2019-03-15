@@ -106,22 +106,12 @@ time_paste <- system.time({
   res_paste <- s$get()
 })
 
-
 time_c <- system.time({
   s <- string_builder_c()
   for (i in seq_along(input_strings)) {
     s$add(input_strings[i], " ")
   }
   res_c <- s$get()
-})
-
-
-time_bracket <- system.time({
-  s <- string_builder_bracket()
-  for (i in seq_along(input_strings)) {
-    s$add(input_strings[i], " ")
-  }
-  res_bracket <- s$get()
 })
 
 time_bfile <- system.time({
@@ -131,6 +121,15 @@ time_bfile <- system.time({
   }
   res_bfile <- s$get()
 })
+
+time_bracket <- system.time({
+  s <- string_builder_bracket()
+  for (i in seq_along(input_strings)) {
+    s$add(input_strings[i], " ")
+  }
+  res_bracket <- s$get()
+})
+
 
 # Save the results for analysis
 results <- data.frame(
