@@ -36,8 +36,7 @@ string_builder_c <- function() {
 }
 
 # A string builder which uses an anonymous binary file. When get() is called, it
-# reads the file and closes it. Unlike the other string builders, this one
-# cannot be used after get() is called.
+# reads the file.
 string_builder_bfile <- function() {
   conn <- file(open="w+b")
   bytes <- 0
@@ -51,11 +50,12 @@ string_builder_bfile <- function() {
     },
     get = function() {
       flush(conn)
-      on.exit(close(conn))
+      seek(conn, 0, rw = "read")
       readChar(conn, bytes, useBytes = TRUE)
     }
   )
 }
+
 
 # A string builder which keeps a vector of strings in a buffer. Each time add()
 # is called, it adds the input to the vector with `[`-indexing. When get() is
