@@ -35,6 +35,28 @@ string_builder_c <- function() {
   )
 }
 
+# A string builder which uses an anonymous binary file. When get() is called, it
+# reads the file and closes it. Unlike the other string builders, this one
+# cannot be used after get() is called.
+string_builder_bfile <- function() {
+  conn <- file(open="w+b")
+  bytes <- 0
+
+  list(
+    add = function(...) {
+      new_content <- paste0(unlist(list(...)), collapse = "")
+      raw <- charToRaw(new_content)
+      bytes <<- bytes + length(raw)
+      writeBin(raw, conn)
+    },
+    get = function() {
+      flush(conn)
+      on.exit(close(conn))
+      readChar(conn, bytes, useBytes = TRUE)
+    }
+  )
+}
+
 # A string builder which keeps a vector of strings in a buffer. Each time add()
 # is called, it adds the input to the vector with `[`-indexing. When get() is
 # called, it calls paste() on the vector to collapse it to a single string.
@@ -102,13 +124,22 @@ time_bracket <- system.time({
   res_bracket <- s$get()
 })
 
+time_bfile <- system.time({
+  s <- string_builder_bfile()
+  for (i in seq_along(input_strings)) {
+    s$add(input_strings[i], " ")
+  }
+  res_bfile <- s$get()
+})
+
 # Save the results for analysis
 results <- data.frame(
   r_version = paste0(R.version$major, ".", R.version$minor),
-  type = c("paste", "c", "bracket"),
+  type = c("paste", "c", "bfile", "bracket"),
   time = c(
     time_paste[['elapsed']],
     time_c[['elapsed']],
+    time_bfile[['elapsed']],
     time_bracket[['elapsed']]
   )
 )
@@ -124,4 +155,5 @@ substr(res_paste, 1, 60)
 
 # Make all of the string builders generate identical results.
 stopifnot(identical(res_paste, res_c))
+stopifnot(identical(res_paste, res_bfile))
 stopifnot(identical(res_paste, res_bracket))
