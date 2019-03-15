@@ -1,0 +1,57 @@
+---
+title: "String builder results"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+
+
+```{r}
+results <- read.csv("results.csv", header = FALSE)
+colnames(results) <- c("R_version", "method", "time")
+
+results$method <- factor(results$method, levels = c("paste", "c", "bracket"))
+```
+
+Performance of various string builder methods on different R versions:
+
+```{r}
+library(ggplot2)
+library(scales)
+
+p <- ggplot(results, aes(R_version, time, color = method)) +
+  geom_line(aes(group = method)) +
+  ylab("Seconds") +
+  ggtitle("String builder performance",
+    "Time to accumulate 20,000 strings, plus spaces between them"
+  )
+
+p
+```
+
+Same as above, but with log y scale:
+
+
+```{r}
+p +
+  scale_y_continuous(
+    trans = log2_trans(),
+    breaks = trans_breaks("log2", function(x) 2^x, n = 10),
+    labels = trans_format("log2", math_format(2^.x))
+  ) +
+  ggtitle("String builder performance (log2 y scale)",
+    "Time to accumulate 20,000 strings, plus spaces between them"
+  )
+```
+
+
+Raw data:
+
+```{r}
+results
+```
